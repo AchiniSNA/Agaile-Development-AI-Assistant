@@ -63,12 +63,23 @@ def generate_response(user_prompt):
     except Exception as e:
         st.error(f"Error generating response: {e}")
         return "Sorry, I couldn't generate a response at the moment."
-
 # Function to create answer from prompt
 def generate_answer(query):
+    st.write("**Step 1:** Creating prompt with online references...")
+    prompt, online_references = make_rag_prompt(query)
+    st.write("Prompt created successfully:", prompt)
+    st.write("Online references:", online_references)
+
+    st.write("**Step 2:** Generating response from AI model...")
+    answer = generate_response(prompt)
+    st.write("Response generated:", answer)
+
+    return answer, online_references
+# Function to create answer from prompt
+'''def generate_answer(query):
     prompt, online_references = make_rag_prompt(query)
     answer = generate_response(prompt)
-    return answer, online_references
+    return answer, online_references'''
 
 # Initialize session state for managing multiple chat sessions
 if "chat_sessions" not in st.session_state:
