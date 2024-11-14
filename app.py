@@ -61,49 +61,20 @@ def make_rag_prompt(query):
     return prompt, online_references
 
 # Function to generate response from AI model
-'''def generate_response(user_prompt):
-    try:
-        model = genai.GenerativeModel('gemini-pro')  # Ensure model name is correct
-        answer = model.generate_content(user_prompt)
-        return answer.text
-    except Exception as e:
-        st.error(f"Error generating response: {e}")
-        return "Sorry, I couldn't generate a response at the moment."'''
-
-# Function to generate response from AI model with debug statements
 def generate_response(user_prompt):
-    st.write("**Step 2.1:** Attempting to load the AI model...")
     try:
         model = genai.GenerativeModel('gemini-pro')  # Ensure model name is correct
-        st.write("Model loaded successfully.")
-
-        st.write("**Step 2.2:** Sending prompt to AI model...")
         answer = model.generate_content(user_prompt)
-        st.write("Response received from model:", answer.text)
-        
         return answer.text
     except Exception as e:
         st.error(f"Error generating response: {e}")
-        st.write("**Error:** Model could not generate a response. Check model configuration and API key.")
         return "Sorry, I couldn't generate a response at the moment."
 
 # Function to create answer from prompt
 def generate_answer(query):
-   # st.write("**Step 1:** Creating prompt with online references...")
     prompt, online_references = make_rag_prompt(query)
-    #st.write("Prompt created successfully:", prompt)
-    #st.write("Online references:", online_references)
-
-    st.write("**Step 2:** Generating response from AI model...")
     answer = generate_response(prompt)
-    st.write("Response generated:", answer)
-
     return answer, online_references
-# Function to create answer from prompt
-'''def generate_answer(query):
-    prompt, online_references = make_rag_prompt(query)
-    answer = generate_response(prompt)
-    return answer, online_references'''
 
 # Initialize session state for managing multiple chat sessions
 if "chat_sessions" not in st.session_state:
