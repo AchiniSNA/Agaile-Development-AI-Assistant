@@ -30,7 +30,7 @@ This project acts as a software process assistant focused on the Scrum methodolo
 
 ## Live Demo
 
-Check out the deployed app here: [Agile Development AI Assistant on Streamlit]([(https://share.streamlit.io/achinisna/scrum-mentor1/main/app.py)])
+Check out the deployed app here: [https://scrum-mentor1.streamlit.app/]
 ## Setup and Installation
 
 1. Clone the repository:
