@@ -1,33 +1,42 @@
 import streamlit as st
 import google.generativeai as genai
 import requests
+import os
+from datetime import datetime
+from dotenv import load_dotenv
+load_dotenv()
 
+
+#genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 # Define the Google Custom Search API method to search online for relevant results
 def search_online(query):
-    api_key = 'AIzaSyC2_tqhkuW6vN-cXkN5L9-USLzS4Jcunwo'  # Replace with your Google API key
-    cse_id = 'e6b0abebf92054298'  # Replace with your Custom Search Engine ID
-    url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={api_key}&cx={cse_id}"
-
-    response = requests.get(url)
-
-    # Check for request errors
-    if response.status_code != 200:
-        st.error(f"Error: Unable to fetch search results. Status code {response.status_code}")
+    api_key = 'AIzaSyAimoBpUkJ41hTqW_cXlcb0cHJOXukUGOg'  # Replace with your Google API key
+    cse_id = '17d59fa1418364d8a'  # Replace with your Custom Search Engine ID
+    if not api_key or not cse_id:
+        st.error("API key or Custom Search Engine ID is missing.")
         return []
 
-    search_results = response.json()
+    url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={api_key}&cx={cse_id}"
 
-    # Extract titles and snippets of relevant search results
-    online_references = []
-    if 'items' in search_results:
-        for result in search_results['items']:
-            title = result.get('title')
-            snippet = result.get('snippet')
-            link = result.get('link')
-            online_references.append(f"**Title**: {title}\n**Snippet**: {snippet}\n[Read more]({link})")
-    else:
-        st.warning("No relevant online references found.")
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        search_results = response.json()
 
+        # Extract titles and snippets of relevant search results
+        online_references = []
+        if 'items' in search_results:
+            for result in search_results['items']:
+                title = result.get('title', 'No title')
+                snippet = result.get('snippet', 'No snippet available')
+                link = result.get('link', '#')
+                online_references.append(f"**{title}**\n{snippet}\n[Read more]({link})")
+        else:
+            st.warning("No relevant online references found.")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching search results: {e}")
+        return []
+    
     return online_references
 
 # Function to generate prompt with online references
@@ -36,20 +45,24 @@ def make_rag_prompt(query):
     online_references_str = "\n".join(online_references) if online_references else "No online references found."
 
     prompt = (
-        f"You are an intelligent assistant that answers questions using only online references. "
+        f"You are an intelligent scrum software development assistant that answers questions using only online references. "
         f"Please answer the question by using information from online resources. "
         f"Make sure your answer is accurate, well-rounded, and integrates the information effectively.\n\n"
-        f"**QUESTION:** '{query}'\n"
-        f"**ONLINE REFERENCES:**\n{online_references_str}\n\n"
-        f"**ANSWER:**"
+        f"QUESTION: '{query}'\n"
+        f"ONLINE REFERENCES:\n{online_references_str}\n\n"
+        f"ANSWER:"
     )
     return prompt, online_references
 
 # Function to generate response from AI model
 def generate_response(user_prompt):
-    model = genai.GenerativeModel('gemini-pro')
-    answer = model.generate_content(user_prompt)
-    return answer.text
+    try:
+        model = genai.GenerativeModel('gemini-pro')  # Ensure model name is correct
+        answer = model.generate_content(user_prompt)
+        return answer.text
+    except Exception as e:
+        st.error(f"Error generating response: {e}")
+        return "Sorry, I couldn't generate a response at the moment."
 
 # Function to create answer from prompt
 def generate_answer(query):
@@ -57,60 +70,80 @@ def generate_answer(query):
     answer = generate_response(prompt)
     return answer, online_references
 
-# Streamlit App
-st.set_page_config(page_title="Agile Development AI Assistant", page_icon="💁", layout="centered")
+# Initialize session state for managing multiple chat sessions
+if "chat_sessions" not in st.session_state:
+    st.session_state["chat_sessions"] = {}
+if "current_session_id" not in st.session_state:
+    # Create the first chat session
+    st.session_state["current_session_id"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.session_state["chat_sessions"][st.session_state["current_session_id"]] = []
 
-# Header Section with Description
-st.title("Agile Development AI Assistant 💁")
-st.markdown(
-    """
-    ### Get quick, reliable insights into Agile development practices!
-    This AI assistant can answer your questions by referencing reliable, up-to-date online resources. 
-    Simply enter your query below and let the assistant help guide you.
-    """
-)
-st.write("---")
+# Sidebar for managing chat sessions
+col11, col22 = st.sidebar.columns([1, 3])  # 1:3 ratio
+col11.image("logo.png", width=50)  # Replace "logo.png" with the path to your logo file
+col22.subheader("Scrum Mentor")
+# st.sidebar.markdown("---")
 
-# Input Section with Sidebar Explanation
-st.sidebar.header("About This Assistant")
-st.sidebar.write(
-    """
-    This assistant uses Google Custom Search and a generative AI model to provide answers to Agile development questions.
-    - **How it works**: The assistant finds relevant online resources for your query, then uses them to craft an informed answer.
-    """
-)
+# Button to start a new chat session
+if st.sidebar.button("🆕 New Chat"):
+    new_session_id = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.session_state["current_session_id"] = new_session_id
+    st.session_state["chat_sessions"][new_session_id] = []
 
-# Query Input Box
-st.subheader("Ask an Agile Development Question")
-query = st.text_input("💬 Enter your query:")
+# Option to end the session and clear chat history
+if st.sidebar.button("🛑 End Session"):
+    st.session_state["chat_sessions"].clear()
+    st.session_state["current_session_id"] = None
+    st.success("All sessions ended and memory cleared.")
 
-# Button to submit query and load answer
-if query:
-    # Create a placeholder for the loading message
-    loading_placeholder = st.empty()
-    loading_placeholder.write("🔍 Searching for relevant information...")
-    
-    # Generate answer with spinner
-    with st.spinner("Generating response..."):
-        answer, online_references = generate_answer(query)
-    
-    # Remove the loading message after generating the answer
-    loading_placeholder.empty()
-    
-    # Displaying answer in a formatted container
-    st.success("Here’s the answer to your question:")
-    st.subheader("Answer:")
-    st.write(answer)
-    
-    # Display 2-3 references after the answer
-    st.write("---")
-    st.subheader("References:")
-    for reference in online_references[:3]:  # Show only the first 2-3 references
-        st.write(reference)
+st.sidebar.subheader("Chat Sessions")
+for index, session_id in enumerate(st.session_state["chat_sessions"]):
+    session_date = datetime.strptime(session_id, "%Y-%m-%d %H:%M:%S").strftime("%Y-%b-%d %H:%M")
+    if st.sidebar.button(f"{session_date}", key=f"{session_id}_{index}"):
+        st.session_state["current_session_id"] = session_id
 
-else:
-    st.info("Type a question in the box above to get started.")
 
-# Footer
-st.write("---")
-st.markdown("Powered by Google Gemini AI and Streamlit")
+# Main chat area
+st.title("Scrum Development AI Assistant 💁")
+st.markdown("Welcome to Agile Mentor! Ask any question to get started.")
+
+# Display the current session's chat history
+current_session = st.session_state["chat_sessions"].get(st.session_state["current_session_id"], [])
+for message in current_session:
+    if message["role"] == "user":
+        st.chat_message("user").markdown(f"{message['content']}")
+    else:
+        st.chat_message("assistant").markdown(f"{message['content']}")
+
+# Input area for new user message
+if "query_input" not in st.session_state:
+    st.session_state.query_input = ""  # Initialize the input field state
+
+# Define the submit function that will reset the input field after submission
+def submit():
+    query = st.session_state.query_input
+    if query:
+        # Append the user query to the current session
+        current_session.append({"role": "user", "content": query})
+
+        # Generate and display the assistant's response
+        with st.spinner("Generating response..."):
+            answer, online_references = generate_answer(query)
+        current_session.append({"role": "assistant", "content": answer})
+
+        # Display the new messages in the chat
+        # st.chat_message("user").markdown(f"{query}")
+        # st.chat_message("assistant").markdown(f"{answer}")
+
+        # Show references for the latest answer
+        # if online_references:
+        #     st.write("---")
+        #     st.subheader("References:")
+        #     for reference in online_references[:3]:
+        #         st.write(reference)
+
+        # Clear the input field after processing
+        st.session_state.query_input = ""  # Reset session state to clear the input
+
+# Input box for the user to enter their message
+st.text_input('💬 Enter your message:', key='query_input', on_change=submit)
