@@ -4,16 +4,11 @@ This project is an AI-powered assistant designed to provide insights and guidanc
 
 ## Table of Contents
 
-- [Project Overview](#project-overview)
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Setup and Installation](#setup-and-installation)
 - [Environment Variables](#environment-variables)
 - [Usage](#usage)
-
-## Project Overview
-
-This project acts as a software process assistant focused on the Scrum methodology. It allows users to enter Scrum-related questions, which the assistant answers by searching the web for relevant resources and generating a response based on these findings. Key Scrum activities such as Sprint Planning, Daily Standup, and Sprint Retrospective are supported.
 
 ## Features
 
@@ -35,7 +30,7 @@ Check out the deployed app here: [https://scrum-mentor1.streamlit.app/]
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/agile-development-ai-assistant.git
+   git clone https://github.com/AchiniSNA/SCRUM-Mentor.git
    cd agile-development-ai-assistant
 
 2. Install the required dependencies:
