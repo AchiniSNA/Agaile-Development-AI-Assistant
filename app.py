@@ -7,17 +7,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-#api_key = os.getenv("GOOGLE_API_KEY")
-#cse_id = os.getenv("CSE_ID")
-
-#genai.configure(api_key=api_key)
-#genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 # Define the Google Custom Search API method to search online for relevant results
 def search_online(query):
     api_key = os.getenv("GOOGLE_API_KEY")
     cse_id = os.getenv("CSE_ID")
-    #api_key = 'AIzaSyAimoBpUkJ41hTqW_cXlcb0cHJOXukUGOg'  # Replace with your Google API key
-    #cse_id = '17d59fa1418364d8a'  # Replace with your Custom Search Engine ID
     if not api_key or not cse_id:
         st.error("API key or Custom Search Engine ID is missing.")
         return []
