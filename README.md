@@ -23,9 +23,6 @@ This project is an AI-powered assistant designed to provide insights and guidanc
 - **Google Custom Search API**: To retrieve relevant search results.
 - **Generative AI Model**: Used to generate responses based on online references.
 
-## Live Demo
-
-Check out the deployed app here: [https://scrum-mentor1.streamlit.app/]
 ## Setup and Installation
 
 1. Clone the repository:
